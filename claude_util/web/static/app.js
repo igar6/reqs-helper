@@ -251,7 +251,8 @@ function dispatch(msg) {
       document.getElementById('download-btn').href = downloadUrl;
       document.getElementById('download-bar').classList.add('visible');
       isGenerating = false;
-      setSendEnabled(false); // session done
+      setSendEnabled(true);
+      document.getElementById('chat-input').placeholder = 'Send an update to regenerate artifacts…';
       // Switch to Score tab so user sees evaluation first
       switchTabById('evaluation');
       break;
@@ -295,7 +296,8 @@ function setPhase(phase) {
   if (phase === 'GENERATING') {
     setSendEnabled(false);
   } else if (phase === 'DONE') {
-    setSendEnabled(false);
+    setSendEnabled(true);
+    document.getElementById('chat-input').placeholder = 'Send an update to regenerate artifacts…';
   } else {
     setSendEnabled(true);
   }
@@ -433,7 +435,7 @@ function sendMessage() {
     showToast('Not connected — wait for the server or refresh the page.');
     return;
   }
-  if (currentPhase === 'GENERATING' || currentPhase === 'DONE') return;
+  if (currentPhase === 'GENERATING') return;
 
   // Show user message with attachment names if any
   const displayText = text + (pendingAttachments.length
@@ -487,6 +489,10 @@ function handleKey(e) {
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function newChat() {
+  window.location.reload();
 }
 
 function setSendEnabled(enabled) {

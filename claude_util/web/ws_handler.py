@@ -201,6 +201,12 @@ async def _handle_user_message(
         # User sent a correction — re-run refinement
         await _run_refinement(ws, session, agent)
 
+    elif session.phase == Phase.DONE:
+        # User updating requirements after generation — revert to refinement
+        session.phase = Phase.REFINING
+        await ws.send_json(_msg("phase_change", phase=Phase.REFINING.value))
+        await _run_refinement(ws, session, agent)
+
 
 async def _run_clarification(
     ws: WebSocket,
@@ -316,7 +322,7 @@ async def _handle_generate(
     agent: AsyncCTOAgent,
 ) -> None:
     """Generate all artifacts sequentially, streaming each to the client."""
-    if session.phase not in (Phase.REFINING, Phase.CLARIFYING):
+    if session.phase not in (Phase.REFINING, Phase.CLARIFYING, Phase.DONE):
         await ws.send_json(_msg("error", code="invalid_phase",
                                 message="Cannot generate — requirements not yet refined."))
         return

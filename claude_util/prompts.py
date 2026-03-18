@@ -85,48 +85,99 @@ _CLARIFICATION_ROLE_DIMENSIONS = {
         "target customer segments, personas, and their primary pain points",
         "prioritisation — what is P0 vs. P1 vs. deferred, and success KPIs",
         "go-to-market timing, priority constraints, and stakeholder approval chain",
+        "intro and positioning — how this capability is pitched internally and externally, "
+        "and whether demo or sales/marketing materials already exist",
+        "logistics — current availability (live/beta/planned), target launch date, "
+        "and which user segments have access today vs. at GA",
+        "support model — expected FAQs, known failure modes, and how customer support "
+        "will be handled post-launch (runbook, escalation path, SLA)",
+        "functional requirements and acceptance criteria — a concrete list of what the "
+        "system must do, stated as testable conditions (Given/When/Then or equivalent)",
     ],
     "Product Owner": [
         "who the end users are and what job they are trying to do",
         "the highest-priority user stories or capabilities for the first sprint",
         "acceptance criteria expectations — what 'done' looks like for each capability",
         "existing backlog items, dependencies on other teams, and Definition of Ready gaps",
+        "key functionality and primary user flow — a step-by-step walkthrough of the "
+        "main use case from entry point to value achieved",
+        "logistics — is this feature live yet, who has access, when was it or will it "
+        "be rolled out, and are there feature-flag or phased-release constraints",
+        "anticipated support scenarios — top 3 things users will get stuck on, "
+        "and whether a user guide or in-product help is in scope",
+        "explicit functional requirements — for each capability, what must the system "
+        "do and not do? List the must-have behaviours and any hard constraints",
     ],
     "Business Analyst": [
         "business rules, process flows, and data entities involved",
         "traceability — which business objective each requirement maps to",
         "edge cases, exception flows, and regulatory or compliance constraints",
         "measurable outcomes and how each requirement will be validated",
+        "intro and stakeholder framing — how sponsors describe this capability today, "
+        "and whether existing documentation or marketing materials need to align",
+        "logistics — current live status, intended audience, and rollout or access-control plan",
+        "support and operational guide — known error conditions, error codes, escalation "
+        "procedures, and who owns post-launch documentation for end users",
+        "functional requirements and acceptance criteria — enumerate the specific system "
+        "behaviours required, linked to business rules and validation conditions",
     ],
     "Architect / Tech Lead": [
         "existing system landscape, tech stack constraints, and integration points",
         "non-functional requirements: performance, scalability, availability, security",
         "build-vs-buy decisions, open-source candidates, and architectural risks",
         "data architecture, API contracts, and deployment / infrastructure constraints",
+        "high-level architecture — logical component map, upstream and downstream "
+        "system dependencies, and what other services depend on this one",
+        "integration API surface — externally exposed APIs, versioning strategy, "
+        "backward-compatibility constraints, and authentication/authorisation model",
+        "functional requirements — which system behaviours have hard technical constraints "
+        "or drive architectural decisions? List the must-have functional requirements",
     ],
     "Release Train Engineer (RTE)": [
         "which teams and ARTs are involved, and their current capacity",
         "cross-team and cross-ART dependencies that must be resolved before PI Planning",
         "PI boundaries — what must ship in PI 1 vs. later, and any fixed milestones",
         "known impediments, organisational risks, and Definition of Ready gaps at Feature level",
+        "logistics — whether any part is already live in production, the feature-flag or "
+        "phased-rollout strategy, and which team owns ongoing support after launch",
+        "functional scope per PI — which specific functional requirements or capabilities "
+        "are committed to PI 1, and which are deferred to later increments",
     ],
     "Developer": [
         "technical feasibility concerns and unknowns in the proposed approach",
         "integration contracts, API schemas, and third-party dependencies",
         "non-functional requirements: response times, data volumes, error handling",
         "Definition of Done expectations, testing strategy, and deployment pipeline constraints",
+        "high-level architecture — component map, upstream/downstream service dependencies, "
+        "shared infrastructure, and any platform or runtime constraints",
+        "support and observability — anticipated error conditions, required logging and "
+        "alerting, on-call escalation path, and runbook or support-guide requirements",
+        "functional requirements and acceptance criteria — the exact behaviours the system "
+        "must implement, with clear pass/fail conditions for each",
     ],
     "CTO / VP Engineering": [
         "strategic context — how this maps to company OKRs and competitive positioning",
         "build-vs-buy trade-offs, long-term architectural implications, and vendor lock-in risk",
         "team structure, hiring needs, and organisational change required to deliver",
         "delivery risk, cost of delay, and executive-level go/no-go criteria",
+        "intro and external positioning — how this capability is communicated to customers "
+        "or partners, and whether it is a public differentiator or an internal improvement",
+        "logistics and rollout — current production status, phased availability plan, "
+        "and any regulatory or contractual milestones tied to the release date",
+        "functional scope and acceptance — which functional requirements define the "
+        "minimum bar for sign-off, and what would trigger a scope reduction decision",
     ],
     "Business Stakeholder": [
         "the business problem in quantified terms — revenue impact, cost, or risk",
         "who the key stakeholders are and what each one needs to see to approve",
         "timeline expectations, priority constraints, and definition of success from the business",
         "what is explicitly out of scope and what must not change (compliance, brand, contracts)",
+        "intro and value proposition — the elevator pitch for this capability and whether "
+        "sales or marketing materials already describe it",
+        "logistics — is any part already available to customers, and what is the planned "
+        "rollout sequence and access model for the broader user base",
+        "functional requirements from the business — which specific capabilities or "
+        "behaviours must the system have for the business to consider it successful",
     ],
 }
 
@@ -166,8 +217,8 @@ def clarification_focus(role: str, scope: str, round_: int) -> str:
         "technical constraints and integration points",
         "scope boundaries and non-functional requirements",
     ])
-    # Round index (0-based), cycling if somehow beyond the list
-    idx = min(round_ - 1, len(dims) - 1)
+    # Round index (0-based), cycling through all dimensions
+    idx = (round_ - 1) % len(dims)
     dim = dims[idx]
 
     scope_note = _CLARIFICATION_SCOPE_DIMENSIONS.get(scope, "")
@@ -219,6 +270,11 @@ When producing output:
 - Map every deliverable to the correct SAFe role.
 - Think in terms of PI Planning cycles, Sprints, and Release Trains.
 - Surface risks, dependencies, and definition-of-done criteria.
+- NEVER fabricate numbers. This includes user counts, market size, revenue figures, \
+percentages, improvement rates, transaction volumes, or any other metric. \
+If a number was not explicitly stated in the conversation, do not write one. \
+Use qualitative language instead (e.g. "large user base", "significant cost reduction") \
+or write "Not provided — to be defined by stakeholders".
 """
 
 # ---------------------------------------------------------------------------
@@ -276,7 +332,9 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 [Propose a sharp, memorable name — 2-4 words]
 
 ### Problem Statement
-[One paragraph: the pain point, who suffers it, what the cost of inaction is. Quantify where possible.]
+[One paragraph: the pain point, who suffers it, and what the cost of inaction is. \
+Use only numbers or metrics explicitly stated in the conversation — do not invent figures, \
+percentages, or scale estimates. If none were given, describe impact qualitatively.]
 
 ### Business Rationale
 - [Market/operational driver — why this, why now]
@@ -296,10 +354,13 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 (list 7-10 items)
 
 ### Success Metrics
-| Metric | Baseline | Target (6 months) | Target (12 months) |
-|--------|----------|------------------|-------------------|
-| [KPI]  | [now]    | [value]          | [value]           |
-(list 3-5 KPIs)
+Only include metrics and target values that were explicitly stated in the conversation. \
+Do not invent baselines, percentages, user counts, or improvement targets.
+
+| Metric | Baseline | Target | Notes |
+|--------|----------|--------|-------|
+| [KPI stated in conversation] | [stated value or "Not provided"] | [stated target or "To be defined"] | [source] |
+(list only KPIs that were actually mentioned)
 
 ### Constraints & Assumptions
 - **Timeline:** [hard deadline if mentioned — otherwise omit; do not fabricate a PI count]
@@ -330,8 +391,9 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 [2-3 sentences: what we're building, why it matters strategically, what changes when it ships]
 
 ### Market Opportunity / Business Driver
-[Quantify the opportunity or cost of the problem. Use numbers where the requirements allow. \
-If not provided, extrapolate based on industry benchmarks and flag the assumption.]
+[Describe the opportunity or cost of the problem using ONLY numbers or metrics explicitly stated \
+in the requirements. Do NOT extrapolate, estimate, or borrow from industry benchmarks. \
+If no concrete figures were provided, describe the opportunity qualitatively — never invent numbers.]
 
 ### Proposed Solution
 [What we're building — focus on business outcomes, not technical implementation. \
@@ -1043,8 +1105,8 @@ The end-to-end experience for the most important persona, from awareness to valu
 
 PI_PLANNING_PROMPT = """\
 Act as a Release Train Engineer (RTE) and SAFe Program Consultant. \
-Based on these refined requirements, produce a complete PI Planning guide. \
-This is the operational playbook for running the first PI Planning event and preparing the team.
+Based on these refined requirements, produce a focused PI Planning guide. \
+Every item must be directly traceable to the requirements — no generic SAFe boilerplate.
 
 {refined_requirements}
 
@@ -1052,103 +1114,51 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 
 ## PI PLANNING GUIDE
 
-### Pre-PI Preparation Checklist (Weeks -4 to 0)
-Everything that MUST be done before the PI Planning event starts. \
-Assign a clear owner and exit criterion for each item.
+### Pre-PI Preparation Checklist
+Items that MUST be completed before the event. Derive from the requirements — only include \
+what is genuinely needed for this initiative.
 
-| # | Activity | Owner | Exit Criterion | Deadline |
-|---|----------|-------|---------------|---------|
-| 1 | Vision & Roadmap deck prepared | PM | Approved by EXEC | Week -3 |
-| 2 | Architecture runway confirmed | ARCH | ADR-001 signed off | Week -3 |
-| 3 | Team capacity collected | RTE | All teams confirmed FTE availability | Week -2 |
-| 4 | Feature backlog prioritized (top 20) | PM + PO | WSJF scores assigned | Week -2 |
-| 5 | DoR verified for PI 1 features | PO | All PI 1 features meet DoR | Week -1 |
-| 6 | Dependencies pre-mapped | TPM | RAID log created | Week -1 |
-| 7 | Logistics confirmed | RTE | Room/remote setup, invites sent | Week -1 |
-[Add 3-5 project-specific items]
+| # | Activity | Owner | Exit Criterion |
+|---|----------|-------|---------------|
+[List 5-8 items drawn directly from the requirements: e.g. if integrations are critical, \
+add "Integration contracts confirmed"; if compliance was mentioned, add "Compliance sign-off obtained". \
+Do NOT list generic activities that apply to every PI.]
 
-### What Must Be Defined Before PI Planning Starts
-Critical inputs the PI Planning event CANNOT proceed without:
+### Critical Inputs — Requirements-Derived
+What the team CANNOT plan without, based on what the requirements actually call for:
 
-**From Product Manager:**
-- [ ] Program Vision (one-pager) — the "why we're doing this"
-- [ ] Top 10 features ranked by business value (WSJF or BV/Risk)
-- [ ] Business context and market drivers presentation
-[Add 2-3 project-specific items]
+- **Product scope:** [The top-ranked features from these requirements that PI 1 must address]
+- **Architecture inputs:** [Technical decisions or constraints raised in the requirements \
+that must be resolved before sprint planning — e.g. API design, data model, key NFRs]
+- **Dependencies to resolve:** [Cross-team or external dependencies identified in the requirements]
+- **Constraints and fixed dates:** [Any hard milestones or compliance dates stated in the requirements]
+[Add items only if the requirements surface them — do not pad with standard SAFe defaults]
 
-**From Architect:**
-- [ ] Architecture Vision — key technical decisions and constraints
-- [ ] Identified technical enablers for PI 1
-- [ ] NFR thresholds (performance, security, availability)
-[Add 2-3 project-specific items]
+### Team Breakout Focus Areas
+What teams should concentrate on during breakout, given this specific scope:
 
-**From RTE:**
-- [ ] ART team roster and capacity per sprint
-- [ ] Iteration calendar (sprint dates, IP sprint marked)
-- [ ] Previous ART metrics baseline (if applicable)
-[Add 2-3 project-specific items]
-
-**From TPM:**
-- [ ] Known cross-team and external dependencies
-- [ ] Risk register seeded with pre-identified risks
-[Add 2-3 project-specific items]
-
-### Team Breakout Session Outputs
-Each team must produce during breakout sessions:
-
-1. **Team PI Objectives** — 3-5 SMART objectives with business value rating (1-10)
-2. **Iteration Plans** — high-level feature/story allocation per sprint
-3. **Dependency map** — what they need from other teams and when
-4. **Risks** — team-level risks to put on the ROAM board
-5. **Stretch objectives** — committed vs. uncommitted features clearly marked
-
-### Program Board Definition
-The program board must show:
-
-| Column | Content |
-|--------|---------|
-| Features | All features planned for this PI (rows) |
-| Iterations | 5 sprint columns + IP sprint |
-| Dependencies | Strings connecting dependent features across teams |
-| Milestones | Fixed dates that cannot move (compliance, legal, external) |
-
-Key features to place on the board for this initiative:
-[List the top 8-10 features from the SAFe deliverables, mapped to iterations]
+- **PI Objectives:** Derive 3-5 SMART objectives directly from the capabilities in these requirements
+- **Iteration allocation:** Map the features from these requirements to sprints — flag dependencies
+- **Stretch vs. committed:** Identify which features are committed vs. stretch based on complexity signals in the requirements
+- **Risks to ROAM:** Surface risks specific to this initiative (not generic risks)
 
 ### ROAM Risk Board
-Risks identified for this PI must be classified:
+Risks specific to this initiative — derived from the requirements, not invented:
 
-| Risk | Resolved / Owned / Accepted / Mitigated | Owner | Action |
-|------|----------------------------------------|-------|--------|
-[List 5-7 risks specific to this project and their ROAM classification]
-
-### PI Objectives Template
-For each team, PI Objectives must follow this format:
-
-**Committed Objective:** [What we will definitely deliver]
-- Business Value (rated by PM): [1-10]
-- Measurement: [How we'll know it's done]
-
-**Stretch Objective:** [What we'll deliver if capacity allows]
-- Business Value: [1-10]
+| Risk | ROAM Classification | Owner | Mitigation |
+|------|---------------------|-------|-----------|
+[List 4-6 risks that are genuinely evident from the requirements. \
+If a risk cannot be traced to something in the requirements, omit it.]
 
 ### Definition of PI Done
 PI [N] is complete when:
 - [ ] All committed PI Objectives achieved or exceeded
-- [ ] System Demo conducted and accepted by PM/PO
+- [ ] System Demo accepted by PM/PO
 - [ ] No P0/P1 defects in accepted features
 - [ ] All DoD criteria met for delivered features
 - [ ] Retrospective conducted, action items assigned
-- [ ] PI [N+1] planning inputs prepared
-[Add 3-5 project-specific criteria]
-
-### Confidence Vote Criteria
-The ART should vote 4 or 5 only when:
-- All teams have a realistic iteration plan
-- Dependencies are identified and agreements made
-- Top risks have mitigations or owners
-- PI Objectives are achievable within capacity
-- The business value is understood by all teams
+[Add 2-4 criteria specific to this initiative — e.g. "Integration with [system] verified end-to-end" \
+if integrations are in scope. Do not add generic items.]
 """
 
 INITIAL_EVALUATION_PROMPT = """\

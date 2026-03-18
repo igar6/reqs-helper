@@ -106,6 +106,11 @@ body {
 }
 .phase-arrow { color: var(--border); font-size: 12px; }
 
+#topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 #model-badge {
   font-size: 10px;
   color: var(--muted);
@@ -117,6 +122,22 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+#new-chat-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+#new-chat-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
 }
 
 /* ── Main layout ─────────────────────────────────── */
