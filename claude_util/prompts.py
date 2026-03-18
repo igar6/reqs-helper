@@ -85,6 +85,8 @@ _CLARIFICATION_ROLE_DIMENSIONS = {
         "target customer segments, personas, and their primary pain points",
         "prioritisation — what is P0 vs. P1 vs. deferred, and success KPIs",
         "go-to-market timing, priority constraints, and stakeholder approval chain",
+        "known dependencies — which other teams, products, or external parties must "
+        "deliver something before this can ship, and are any of those at risk",
         "intro and positioning — how this capability is pitched internally and externally, "
         "and whether demo or sales/marketing materials already exist",
         "logistics — current availability (live/beta/planned), target launch date, "
@@ -113,6 +115,8 @@ _CLARIFICATION_ROLE_DIMENSIONS = {
         "traceability — which business objective each requirement maps to",
         "edge cases, exception flows, and regulatory or compliance constraints",
         "measurable outcomes and how each requirement will be validated",
+        "known dependencies — which upstream data sources, systems, or business processes "
+        "must be in place before this solution can operate correctly",
         "intro and stakeholder framing — how sponsors describe this capability today, "
         "and whether existing documentation or marketing materials need to align",
         "logistics — current live status, intended audience, and rollout or access-control plan",
@@ -126,6 +130,9 @@ _CLARIFICATION_ROLE_DIMENSIONS = {
         "non-functional requirements: performance, scalability, availability, security",
         "build-vs-buy decisions, open-source candidates, and architectural risks",
         "data architecture, API contracts, and deployment / infrastructure constraints",
+        "known hard dependencies — which upstream services, shared platforms, or external "
+        "APIs must be available or deliver changes before this system can go live, "
+        "and which systems will depend on this one once it ships",
         "high-level architecture — logical component map, upstream and downstream "
         "system dependencies, and what other services depend on this one",
         "integration API surface — externally exposed APIs, versioning strategy, "
@@ -135,6 +142,8 @@ _CLARIFICATION_ROLE_DIMENSIONS = {
     ],
     "Release Train Engineer (RTE)": [
         "which teams and ARTs are involved, and their current capacity",
+        "known dependencies — list every named dependency: which team or external party "
+        "must deliver what, by when, and which are already at risk or unconfirmed",
         "cross-team and cross-ART dependencies that must be resolved before PI Planning",
         "PI boundaries — what must ship in PI 1 vs. later, and any fixed milestones",
         "known impediments, organisational risks, and Definition of Ready gaps at Feature level",
@@ -160,6 +169,8 @@ _CLARIFICATION_ROLE_DIMENSIONS = {
         "build-vs-buy trade-offs, long-term architectural implications, and vendor lock-in risk",
         "team structure, hiring needs, and organisational change required to deliver",
         "delivery risk, cost of delay, and executive-level go/no-go criteria",
+        "known dependencies — which partner deliverables, vendor contracts, platform teams, "
+        "or regulatory approvals are on the critical path, and which carry the most risk",
         "intro and external positioning — how this capability is communicated to customers "
         "or partners, and whether it is a public differentiator or an internal improvement",
         "logistics and rollout — current production status, phased availability plan, "
@@ -1175,10 +1186,9 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 ## REQUIREMENTS QUALITY SCORECARD
 *(Scored on the original input — before refinement)*
 
-### Overall Score: [X.X] / 10
-[One direct sentence: what is the quality of what was submitted and what that means for readiness.]
-
 ### Category Scores
+
+Score each category independently as a whole number from 1 to 10.
 
 | Category | Score | Assessment |
 |----------|-------|-----------|
@@ -1189,6 +1199,11 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 | Success Metrics | [X]/10 | [1-line: are measurable outcomes mentioned?] |
 | Technical Indicators | [X]/10 | [1-line: are constraints/integrations hinted at?] |
 | Completeness | [X]/10 | [1-line: how much was left unsaid?] |
+
+### Overall Score: [X.X] / 10
+Calculate as the exact arithmetic mean of the 7 category scores above (sum ÷ 7), rounded to one \
+decimal place. Do not apply weights or adjustments.
+[One direct sentence: what is the quality of what was submitted and what that means for readiness.]
 
 ### What Was Clear
 - [Information that came through well and directly informs the solution]
