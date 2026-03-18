@@ -235,7 +235,7 @@ def clarification_focus(role: str, scope: str, round_: int) -> str:
     scope_note = _CLARIFICATION_SCOPE_DIMENSIONS.get(scope, "")
     scope_line = f"\nScope lens: {scope_note}" if scope_note else ""
 
-    return f"This round focus on: **{dim}**.{scope_line}"
+    return f"Priority focus for this round: **{dim}**. Your 3 questions should centre on this area, but may cover adjacent gaps if critical ones remain.{scope_line}"
 
 
 def role_scope_preamble(role: str, scope: str) -> str:
@@ -297,12 +297,15 @@ You are in CLARIFICATION ROUND {round} of {max_rounds}.
 
 {focus}
 
-Ask exactly 3 focused questions tailored to the role and scope above. \
-Format them as a numbered list. One direct sentence per question. No preamble. No commentary. \
-Do not repeat anything already answered in the conversation.
+Ask 1 to 3 questions depending on how much is still unclear — ask more when the input is vague \
+or incomplete, fewer when most of the focus area is already addressed. \
+Format as a numbered list. Each question is one direct sentence. No preamble, no commentary, \
+no answers. Do not repeat anything already answered in the conversation.
 
-If every critical dimension is already fully covered in the conversation, \
-output ONLY the single word: SUFFICIENT
+If the user shows reluctance, impatience, or resistance to answering — or signals they just want \
+to proceed — do not push further. Output ONLY the single word: SUFFICIENT
+
+If every critical dimension is already fully and specifically covered, also output ONLY: SUFFICIENT
 """
 
 SUFFICIENCY_CHECK_PROMPT = """\
