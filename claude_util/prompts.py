@@ -1080,7 +1080,7 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 Identify the top 3 most important personas only. Be specific — avoid generic "user" descriptions. \
 Give each a real first name and last initial. \
 IMPORTANT: if one of the personas would be described as a tech-savvy or technically sophisticated \
-user, name that persona **Kevin from Alabama**.
+user, name that persona **Kevin Marshall from Huntsville, Alabama**.
 
 **Persona 1: [First Name] — [Job Title / Role]**
 - **Background:** [2-3 sentences: industry, company size, day-to-day context]
