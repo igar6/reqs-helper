@@ -230,10 +230,32 @@ async def _handle_user_message(
         await _handle_generate(ws, session, agent)
 
     elif session.phase == Phase.DONE:
-        # User updating requirements after generation — revert to refinement
-        session.phase = Phase.REFINING
-        await ws.send_json(_msg("phase_change", phase=Phase.REFINING.value))
-        await _run_refinement(ws, session, agent)
+        # Try to identify which artifact the user wants to regenerate
+        target_id: str | None = None
+        try:
+            target_id = await agent.classify_artifact_target(text.strip())
+        except Exception:
+            pass
+
+        if target_id is not None:
+            # Jump directly to the targeted artifact
+            idx = next(i for i, (aid, _, _) in enumerate(ARTIFACT_SEQUENCE) if aid == target_id)
+            title = next(t for aid, t, _ in ARTIFACT_SEQUENCE if aid == target_id)
+            session.phase = Phase.GENERATING
+            session.artifact_index = idx
+            session.artifact_correction = text.strip()
+            session.artifact_stopped = False
+            await ws.send_json(_msg("phase_change", phase=Phase.GENERATING.value))
+            await ws.send_json(_msg(
+                "chat_message", role="assistant",
+                content=f"Got it — regenerating **{title}** with your update…",
+            ))
+            await _handle_generate(ws, session, agent)
+        else:
+            # General update — re-run full refinement
+            session.phase = Phase.REFINING
+            await ws.send_json(_msg("phase_change", phase=Phase.REFINING.value))
+            await _run_refinement(ws, session, agent)
 
 
 async def _run_clarification(

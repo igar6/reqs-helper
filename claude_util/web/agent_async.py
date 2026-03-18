@@ -96,6 +96,11 @@ ARTIFACT_SEQUENCE: list[tuple[str, str, object]] = [
     ("raci_timeline",     "RACI & Timeline",      _raci_timeline),
 ]
 
+_ARTIFACT_IDS = [art_id for art_id, _, _ in ARTIFACT_SEQUENCE]
+_ARTIFACT_CLASSIFY_LIST = "\n".join(
+    f"- {art_id}: {title}" for art_id, title, _ in ARTIFACT_SEQUENCE
+)
+
 
 # ---------------------------------------------------------------------------
 # Backend: Anthropic
@@ -302,7 +307,10 @@ class AsyncCTOAgent:
     _DIAGRAM_SYSTEM = (
         "You are a software architecture diagram specialist. "
         "Your only job is to output valid Mermaid flowchart code. "
-        "Never include explanations, prose, or markdown fences."
+        "Never include explanations, prose, or markdown fences. "
+        "Node IDs must be alphanumeric with no spaces or hyphens. "
+        "Never use parentheses or colons inside node labels or arrow labels. "
+        "Wrap labels containing special characters in double quotes."
     )
 
     async def check_diagram_sufficiency(self, technical_design: str) -> bool:
@@ -321,6 +329,23 @@ class AsyncCTOAgent:
             max_tokens=2048,
         ):
             yield chunk
+
+    async def classify_artifact_target(self, user_message: str) -> str | None:
+        """Return the artifact_id the user is targeting, or None if general/unclear."""
+        result = await self._backend.complete(
+            system=(
+                "The user has finished generating a delivery plan and sent a follow-up message. "
+                "Identify which artifact they want to regenerate or update.\n\n"
+                "Artifact IDs:\n"
+                f"{_ARTIFACT_CLASSIFY_LIST}\n\n"
+                "Reply with ONLY the artifact ID if you are confident, or 'none' if the message "
+                "is general, ambiguous, or not targeting a specific artifact."
+            ),
+            messages=[{"role": "user", "content": user_message}],
+            max_tokens=20,
+        )
+        candidate = result.strip().lower()
+        return candidate if candidate in _ARTIFACT_IDS else None
 
     async def stream_judge(self, session: SessionState) -> AsyncIterator[str]:
         artifact_order = [

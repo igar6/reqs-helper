@@ -1034,17 +1034,21 @@ Answer with ONLY: YES or NO
 """
 
 ARCHITECTURE_DIAGRAM_PROMPT = """\
-Based on this technical design, generate a Mermaid architecture diagram.
+Based on this technical design, generate a Mermaid flowchart diagram.
 
 {technical_design}
 
-Rules:
-- Output ONLY the raw Mermaid diagram code. No explanation. No markdown fences. No commentary.
-- Start with: flowchart TD
-- Include: external users/actors, frontend, backend services, databases, external integrations
-- Label arrows with the protocol or data type
-- Keep it readable — max 15-20 nodes
-- Use subgraphs to group related components (e.g., subgraph Backend, subgraph Data Layer)
+STRICT SYNTAX RULES — violations cause parse errors:
+- Output ONLY raw Mermaid code. No explanation. No markdown fences. No commentary.
+- First line MUST be exactly: flowchart TD
+- Node IDs: alphanumeric only, no spaces, no hyphens (e.g. WebApp, AuthService, PostgresDB)
+- Node labels: wrap in double quotes if they contain any special characters e.g. WebApp["Web App"]
+- Arrow labels: use |label| syntax e.g. A -->|REST| B — no parentheses inside labels
+- Do NOT use parentheses () inside any label or node text
+- Do NOT use colons : inside node labels
+- Subgraph names: plain words only, no special characters e.g. subgraph Backend
+- Keep it simple — max 12 nodes, max 1 level of subgraph nesting
+- Every node ID used in an edge must be declared or used at least once as a node
 """
 
 JUDGE_PROMPT = """\
