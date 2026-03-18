@@ -127,17 +127,21 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);
-  background: transparent;
+  background: var(--surf3);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 10px;
+  border-radius: 20px;
+  padding: 4px 13px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  font-family: var(--font);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
   white-space: nowrap;
 }
 #new-chat-btn:hover {
-  color: var(--text);
+  background: var(--accent-lo);
   border-color: var(--accent);
+  color: white;
 }
 
 /* ── Main layout ─────────────────────────────────── */

@@ -492,6 +492,7 @@ function autoResize(el) {
 }
 
 function newChat() {
+  if (ws) ws.close();
   window.location.reload();
 }
 
