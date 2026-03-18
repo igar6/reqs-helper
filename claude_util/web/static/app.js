@@ -157,7 +157,6 @@ function dispatch(msg) {
       document.getElementById('refined-content').style.display = 'block';
       document.getElementById('refined-content').innerHTML = '';
       document.getElementById('refined-content').classList.add('stream-cursor');
-      switchTabById('refined');
       break;
 
     case 'refined_requirements_token':
@@ -343,6 +342,10 @@ function setPhase(phase) {
   } else if (phase === 'DONE') {
     setSendEnabled(true);
     document.getElementById('chat-input').placeholder = 'Send an update to regenerate artifacts…';
+    const genBtn = document.getElementById('generate-btn');
+    genBtn.classList.remove('visible', 'stop');
+    genBtn.textContent = '⚡ Generate Artifacts';
+    genBtn.onclick = sendGenerate;
   } else {
     setSendEnabled(true);
   }
