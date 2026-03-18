@@ -30,6 +30,8 @@ class SessionState:
     refined_requirements: str = ""
     # Generated artifacts keyed by artifact_id
     artifacts: dict[str, str] = field(default_factory=dict)
+    # Index into ARTIFACT_SEQUENCE — tracks step-by-step generation progress
+    artifact_index: int = 0
     # Gantt chart PNG as base64 string
     gantt_png_b64: str | None = None
     # PDF as bytes

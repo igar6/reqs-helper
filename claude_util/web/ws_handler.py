@@ -143,7 +143,7 @@ async def handle_websocket(websocket: WebSocket) -> None:
                     payload.get("text", ""),
                     payload.get("attachments"),
                 )
-            elif msg_type == "generate":
+            elif msg_type in ("generate", "generate_next"):
                 await _handle_generate(websocket, session, agent)
             elif msg_type == "cancel":
                 break
@@ -321,53 +321,69 @@ async def _handle_generate(
     session: SessionState,
     agent: AsyncCTOAgent,
 ) -> None:
-    """Generate all artifacts sequentially, streaming each to the client."""
-    if session.phase not in (Phase.REFINING, Phase.CLARIFYING, Phase.DONE):
-        await ws.send_json(_msg("error", code="invalid_phase",
-                                message="Cannot generate — requirements not yet refined."))
-        return
-
+    """Generate one artifact per call; pause between each for user confirmation."""
     if not session.refined_requirements:
         await ws.send_json(_msg("error", code="no_requirements",
                                 message="Refined requirements are empty. Please complete clarification first."))
         return
 
-    session.phase = Phase.GENERATING
-    session.touch()
-    await ws.send_json(_msg("phase_change", phase=Phase.GENERATING.value))
+    # Transition to GENERATING on first call; resume if already there
+    if session.phase in (Phase.REFINING, Phase.CLARIFYING, Phase.DONE):
+        session.phase = Phase.GENERATING
+        session.artifact_index = 0
+        session.touch()
+        await ws.send_json(_msg("phase_change", phase=Phase.GENERATING.value))
+    elif session.phase != Phase.GENERATING:
+        await ws.send_json(_msg("error", code="invalid_phase",
+                                message="Cannot generate — requirements not yet refined."))
+        return
 
-    # Generate each artifact
-    for artifact_id, title, prompt_fn in ARTIFACT_SEQUENCE:
-        await ws.send_json(_msg("artifact_start", artifact_id=artifact_id, title=title))
+    idx = session.artifact_index
+    if idx >= len(ARTIFACT_SEQUENCE):
+        await _finalize_generation(ws, session)
+        return
 
-        full_text = ""
-        try:
-            async for chunk in agent.stream_artifact(session, prompt_fn):
-                full_text += chunk
-                await ws.send_json(_msg("artifact_token", artifact_id=artifact_id, token=chunk))
-        except Exception as exc:
-            await ws.send_json(_msg(
-                "error", code="llm_error", message=f"Failed to generate {title}: {exc}"
-            ))
-            # Continue with next artifact rather than aborting entirely
+    artifact_id, title, prompt_fn = ARTIFACT_SEQUENCE[idx]
+    await ws.send_json(_msg("artifact_start", artifact_id=artifact_id, title=title))
 
-        session.artifacts[artifact_id] = full_text
+    full_text = ""
+    try:
+        async for chunk in agent.stream_artifact(session, prompt_fn):
+            full_text += chunk
+            await ws.send_json(_msg("artifact_token", artifact_id=artifact_id, token=chunk))
+    except Exception as exc:
         await ws.send_json(_msg(
-            "artifact_complete", artifact_id=artifact_id, full_text=full_text
+            "error", code="llm_error", message=f"Failed to generate {title}: {exc}"
         ))
 
-    # Post-process: extract Mermaid from technical_design (Architecture Diagram section)
-    tech_text = session.artifacts.get("technical_design", "")
-    mermaid_code = _extract_mermaid(tech_text)
-    if mermaid_code:
-        await ws.send_json(_msg("mermaid_ready", mermaid_code=mermaid_code))
+    session.artifacts[artifact_id] = full_text
+    await ws.send_json(_msg("artifact_complete", artifact_id=artifact_id, full_text=full_text))
 
-    # Signal markdown is ready for download
+    # Extract Mermaid immediately after technical_design completes
+    if artifact_id == "technical_design":
+        mermaid_code = _extract_mermaid(full_text)
+        if mermaid_code:
+            await ws.send_json(_msg("mermaid_ready", mermaid_code=mermaid_code))
+
+    session.artifact_index += 1
+
+    if session.artifact_index < len(ARTIFACT_SEQUENCE):
+        _, next_title, _ = ARTIFACT_SEQUENCE[session.artifact_index]
+        await ws.send_json(_msg(
+            "generation_paused",
+            completed=idx + 1,
+            total=len(ARTIFACT_SEQUENCE),
+            next_title=next_title,
+        ))
+    else:
+        await _finalize_generation(ws, session)
+
+
+async def _finalize_generation(ws: WebSocket, session: SessionState) -> None:
     await ws.send_json(_msg(
         "markdown_ready",
         download_url=f"/api/export/markdown?session_id={session.session_id}",
     ))
-
     session.phase = Phase.DONE
     await ws.send_json(_msg("phase_change", phase=Phase.DONE.value))
 

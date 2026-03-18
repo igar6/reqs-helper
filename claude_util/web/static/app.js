@@ -188,11 +188,13 @@ function dispatch(msg) {
         artifactBufs[artifact_id] = '';
         markTabGenerating(artifact_id);
         clearPanePlaceholder(artifact_id, payload.title);
+        // Remove the "Generate Next" pause prompt if present
+        const pauseMsg = document.getElementById('generation-pause-msg');
+        if (pauseMsg) pauseMsg.remove();
         // Auto-switch to Score tab when evaluation runs before refinement
         if (artifact_id === 'evaluation' && currentPhase !== 'GENERATING') {
           switchTabById('evaluation');
         }
-        // During full generation, don't auto-switch — let user browse
         if (currentPhase === 'GENERATING') {
           isGenerating = true;
           setSendEnabled(false);
@@ -243,6 +245,26 @@ function dispatch(msg) {
     // ── Mermaid diagram ──
     case 'mermaid_ready':
       renderMermaid(payload.mermaid_code);
+      break;
+
+    // ── Generation paused between artifacts ──
+    case 'generation_paused':
+      {
+        const { completed, total, next_title } = payload;
+        const div = document.createElement('div');
+        div.className = 'msg assistant';
+        div.id = 'generation-pause-msg';
+        div.innerHTML = `
+          <div class="msg-bubble">
+            <p><strong>${completed}</strong> of <strong>${total}</strong> done.
+               Next: <strong>${escapeHtml(next_title)}</strong></p>
+            <div class="role-btn-group">
+              <button class="role-btn" onclick="sendGenerateNext(this)">Generate →</button>
+            </div>
+          </div>`;
+        document.getElementById('chat-messages').appendChild(div);
+        scrollChatToBottom();
+      }
       break;
 
     // ── Markdown ready ──
@@ -477,6 +499,13 @@ function sendGenerate() {
   document.getElementById('generate-btn').classList.remove('visible');
   setSendEnabled(false);
   ws.send(JSON.stringify({ type: 'generate', payload: { session_id: sessionId } }));
+}
+
+function sendGenerateNext(btn) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  ws.send(JSON.stringify({ type: 'generate_next', payload: { session_id: sessionId } }));
 }
 
 function handleKey(e) {

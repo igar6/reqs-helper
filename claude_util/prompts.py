@@ -1201,8 +1201,6 @@ Score each category independently as a whole number from 1 to 10.
 | Completeness | [X]/10 | [1-line: how much was left unsaid?] |
 
 ### Overall Score: [X.X] / 10
-Calculate as the exact arithmetic mean of the 7 category scores above (sum ÷ 7), rounded to one \
-decimal place. Do not apply weights or adjustments.
 [One direct sentence: what is the quality of what was submitted and what that means for readiness.]
 
 ### What Was Clear
