@@ -188,9 +188,6 @@ function dispatch(msg) {
         artifactBufs[artifact_id] = '';
         markTabGenerating(artifact_id);
         clearPanePlaceholder(artifact_id, payload.title);
-        // Remove the "Generate Next" pause prompt if present
-        const pauseMsg = document.getElementById('generation-pause-msg');
-        if (pauseMsg) pauseMsg.remove();
         // Auto-switch to Score tab when evaluation runs before refinement
         if (artifact_id === 'evaluation' && currentPhase !== 'GENERATING') {
           switchTabById('evaluation');
@@ -251,19 +248,15 @@ function dispatch(msg) {
     case 'generation_paused':
       {
         const { completed, total, next_title } = payload;
-        const div = document.createElement('div');
-        div.className = 'msg assistant';
-        div.id = 'generation-pause-msg';
-        div.innerHTML = `
-          <div class="msg-bubble">
-            <p><strong>${completed}</strong> of <strong>${total}</strong> done.
-               Next: <strong>${escapeHtml(next_title)}</strong></p>
-            <div class="role-btn-group">
-              <button class="role-btn" onclick="sendGenerateNext(this)">Generate →</button>
-            </div>
-          </div>`;
-        document.getElementById('chat-messages').appendChild(div);
-        scrollChatToBottom();
+        isGenerating = false;
+        // Repurpose the generate button for the next step
+        const genBtn = document.getElementById('generate-btn');
+        genBtn.textContent = `⚡ Generate: ${next_title} (${completed + 1}/${total})`;
+        genBtn.onclick = sendGenerateNext;
+        genBtn.classList.add('visible');
+        // Also add an informational chat message
+        appendChatMsg('assistant',
+          `**${completed}/${total}** done. Click to generate **${next_title}**.`);
       }
       break;
 
@@ -501,10 +494,13 @@ function sendGenerate() {
   ws.send(JSON.stringify({ type: 'generate', payload: { session_id: sessionId } }));
 }
 
-function sendGenerateNext(btn) {
+function sendGenerateNext() {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  btn.disabled = true;
-  btn.textContent = 'Generating…';
+  const genBtn = document.getElementById('generate-btn');
+  genBtn.classList.remove('visible');
+  genBtn.textContent = '⚡ Generate Artifacts';
+  genBtn.onclick = sendGenerate;
+  setSendEnabled(false);
   ws.send(JSON.stringify({ type: 'generate_next', payload: { session_id: sessionId } }));
 }
 

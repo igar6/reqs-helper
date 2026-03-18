@@ -14,7 +14,7 @@ from typing import AsyncIterator
 from ..prompts import (
     SYSTEM_PROMPT,
     CLARIFICATION_INSTRUCTION,
-    SUFFICIENCY_CHECK_PROMPT,
+    sufficiency_check_prompt,
     REQUIREMENTS_REFINEMENT_PROMPT,
     INITIAL_EVALUATION_PROMPT,
     PERSONAS_USECASES_PROMPT,
@@ -249,8 +249,9 @@ class AsyncCTOAgent:
         history_text = "\n".join(
             f"{m['role'].upper()}: {m['content']}" for m in session.history
         )
+        prompt = sufficiency_check_prompt(session.user_role)
         result = await self._backend.complete(
-            system=SUFFICIENCY_CHECK_PROMPT,
+            system=prompt,
             messages=[{"role": "user", "content": f"Conversation:\n{history_text}"}],
             max_tokens=5,
         )

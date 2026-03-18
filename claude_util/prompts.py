@@ -309,6 +309,7 @@ SUFFICIENCY_CHECK_PROMPT = """\
 Review this conversation. Determine if there is enough information to produce a complete \
 SAFe Agile requirements breakdown with business rationale.
 
+{role_note}\
 Answer YES only if ALL of the following are addressed:
 1. Core business problem or opportunity is clearly understood
 2. Target users and their primary needs are identified
@@ -318,11 +319,34 @@ Answer YES only if ALL of the following are addressed:
 6. Timeline or priority constraints are indicated (budget is not required)
 7. Key integration points or technical constraints are mentioned
 8. At least one out-of-scope item or explicit boundary is stated
-
-If any of these 8 points is missing or too vague, answer NO.
+{fr_check}\
+If any of the above points is missing or too vague, answer NO.
 
 Answer with ONLY: YES or NO
 """
+
+_FR_CHECK_ROLES = {
+    "Product Owner",
+    "Business Analyst",
+    "Developer",
+    "Product Manager",
+    "Architect / Tech Lead",
+}
+
+
+def sufficiency_check_prompt(role: str) -> str:
+    """Return the sufficiency check prompt, with a role-specific FR/AC gate if applicable."""
+    if role in _FR_CHECK_ROLES:
+        role_note = f"The person providing requirements is a **{role}**.\n\n"
+        fr_check = (
+            "9. At least some functional requirements (what the system must do) "
+            "and acceptance criteria (testable pass/fail conditions) have been discussed — "
+            f"this is essential for a {role}.\n"
+        )
+    else:
+        role_note = f"The person providing requirements is a **{role}**.\n\n" if role else ""
+        fr_check = ""
+    return SUFFICIENCY_CHECK_PROMPT.format(role_note=role_note, fr_check=fr_check)
 
 # ---------------------------------------------------------------------------
 # Web agent — refinement phase
