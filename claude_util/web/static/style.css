@@ -251,6 +251,8 @@ body {
 #generate-btn:hover { background: var(--accent2); }
 #generate-btn:active { transform: scale(0.98); }
 #generate-btn.visible { display: block; }
+#generate-btn.stop { background: var(--red); }
+#generate-btn.stop:hover { background: #dc2626; }
 
 /* Chat input */
 #chat-input-area {

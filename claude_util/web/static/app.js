@@ -196,7 +196,11 @@ function dispatch(msg) {
           isGenerating = true;
           setSendEnabled(false);
           document.getElementById('chat-input').placeholder = 'Describe your idea or requirement…';
-          document.getElementById('generate-btn').classList.remove('visible');
+          const genBtn = document.getElementById('generate-btn');
+          genBtn.textContent = '⏹ Stop';
+          genBtn.onclick = sendStop;
+          genBtn.classList.add('stop');
+          genBtn.classList.add('visible');
         }
       }
       break;
@@ -259,10 +263,30 @@ function dispatch(msg) {
         const genBtn = document.getElementById('generate-btn');
         genBtn.textContent = `⚡ Generate: ${next_title} (${completed + 1}/${total})`;
         genBtn.onclick = sendGenerateNext;
+        genBtn.classList.remove('stop');
         genBtn.classList.add('visible');
         // Informational chat message
         appendChatMsg('assistant',
           `**${completed}/${total}** done. Send a correction to refine this artifact, or click **Generate** to continue.`);
+      }
+      break;
+
+    // ── Generation stopped by user ──
+    case 'generation_stopped':
+      {
+        isGenerating = false;
+        markTabDone(payload.artifact_id);
+        setSendEnabled(true);
+        document.getElementById('chat-input').placeholder =
+          'Send feedback to improve this artifact, or click Regenerate…';
+        document.getElementById('chat-input').focus();
+        const genBtn = document.getElementById('generate-btn');
+        genBtn.textContent = '⟳ Regenerate';
+        genBtn.onclick = sendGenerateNext;
+        genBtn.classList.remove('stop');
+        genBtn.classList.add('visible');
+        appendChatMsg('assistant',
+          'Stopped. Send feedback or click **Regenerate** to try again.');
       }
       break;
 
@@ -498,6 +522,11 @@ function sendGenerate() {
   document.getElementById('generate-btn').classList.remove('visible');
   setSendEnabled(false);
   ws.send(JSON.stringify({ type: 'generate', payload: { session_id: sessionId } }));
+}
+
+function sendStop() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({ type: 'stop_artifact', payload: { session_id: sessionId } }));
 }
 
 function sendGenerateNext() {

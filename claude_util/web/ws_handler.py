@@ -7,6 +7,7 @@ Phase state machine:
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import os
 import re
@@ -113,6 +114,8 @@ async def handle_websocket(websocket: WebSocket) -> None:
         roles=ROLES,
     ))
 
+    gen_task: asyncio.Task | None = None
+
     try:
         while True:
             data = await websocket.receive_json()
@@ -144,8 +147,19 @@ async def handle_websocket(websocket: WebSocket) -> None:
                     payload.get("attachments"),
                 )
             elif msg_type in ("generate", "generate_next"):
-                await _handle_generate(websocket, session, agent)
+                if gen_task and not gen_task.done():
+                    continue  # already generating — ignore duplicate
+                gen_task = asyncio.create_task(_handle_generate(websocket, session, agent))
+            elif msg_type == "stop_artifact":
+                if gen_task and not gen_task.done():
+                    gen_task.cancel()
+                    try:
+                        await gen_task
+                    except asyncio.CancelledError:
+                        pass
             elif msg_type == "cancel":
+                if gen_task and not gen_task.done():
+                    gen_task.cancel()
                 break
 
     except WebSocketDisconnect:
@@ -359,16 +373,23 @@ async def _handle_generate(
     full_text = ""
     correction = session.artifact_correction
     session.artifact_correction = ""
+    stopped = False
     try:
         async for chunk in agent.stream_artifact(session, prompt_fn, correction):
             full_text += chunk
             await ws.send_json(_msg("artifact_token", artifact_id=artifact_id, token=chunk))
+    except asyncio.CancelledError:
+        stopped = True
     except Exception as exc:
         await ws.send_json(_msg(
             "error", code="llm_error", message=f"Failed to generate {title}: {exc}"
         ))
 
     session.artifacts[artifact_id] = full_text
+
+    if stopped:
+        await ws.send_json(_msg("generation_stopped", artifact_id=artifact_id))
+        return  # leave artifact_index unchanged so user can regenerate
     await ws.send_json(_msg("artifact_complete", artifact_id=artifact_id, full_text=full_text))
 
     # Extract Mermaid immediately after technical_design completes
