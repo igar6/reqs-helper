@@ -34,7 +34,7 @@ from .session import SessionState
 # ---------------------------------------------------------------------------
 
 ANTHROPIC_DEFAULT_MODEL  = "claude-sonnet-4-6"
-OPENROUTER_DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+OPENROUTER_DEFAULT_MODEL = "arcee-ai/trinity-large-preview:free"
 
 FREE_MODELS = [
     "meta-llama/llama-3.3-70b-instruct:free",

@@ -71,7 +71,7 @@ def serve(host: str = "127.0.0.1", port: int = 8000, reload: bool = False) -> No
         raise SystemExit(1)
 
     backend = "Anthropic (Claude)" if os.getenv("ANTHROPIC_API_KEY") else "OpenRouter"
-    model = os.getenv("AGENT_MODEL", "claude-sonnet-4-6" if os.getenv("ANTHROPIC_API_KEY") else "llama-3.3-70b:free")
+    model = os.getenv("AGENT_MODEL", "claude-sonnet-4-6" if os.getenv("ANTHROPIC_API_KEY") else "arcee-ai/trinity-large-preview:free")
     print(f" Backend : {backend}")
     print(f" Model   : {model}")
 
