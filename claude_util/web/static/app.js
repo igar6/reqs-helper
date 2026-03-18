@@ -157,6 +157,7 @@ function dispatch(msg) {
       document.getElementById('refined-content').style.display = 'block';
       document.getElementById('refined-content').innerHTML = '';
       document.getElementById('refined-content').classList.add('stream-cursor');
+      markTabGenerating('refined');
       break;
 
     case 'refined_requirements_token':
