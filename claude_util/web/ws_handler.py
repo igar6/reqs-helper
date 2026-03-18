@@ -201,6 +201,16 @@ async def _handle_user_message(
         # User sent a correction — re-run refinement
         await _run_refinement(ws, session, agent)
 
+    elif session.phase == Phase.GENERATING:
+        # User sent a correction during a generation pause — re-generate the last artifact
+        session.artifact_correction = text.strip()
+        session.artifact_index = max(0, session.artifact_index - 1)
+        await ws.send_json(_msg(
+            "chat_message", role="assistant",
+            content="Got it — regenerating with your correction…"
+        ))
+        await _handle_generate(ws, session, agent)
+
     elif session.phase == Phase.DONE:
         # User updating requirements after generation — revert to refinement
         session.phase = Phase.REFINING
@@ -347,8 +357,10 @@ async def _handle_generate(
     await ws.send_json(_msg("artifact_start", artifact_id=artifact_id, title=title))
 
     full_text = ""
+    correction = session.artifact_correction
+    session.artifact_correction = ""
     try:
-        async for chunk in agent.stream_artifact(session, prompt_fn):
+        async for chunk in agent.stream_artifact(session, prompt_fn, correction):
             full_text += chunk
             await ws.send_json(_msg("artifact_token", artifact_id=artifact_id, token=chunk))
     except Exception as exc:

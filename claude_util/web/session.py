@@ -32,6 +32,8 @@ class SessionState:
     artifacts: dict[str, str] = field(default_factory=dict)
     # Index into ARTIFACT_SEQUENCE — tracks step-by-step generation progress
     artifact_index: int = 0
+    # Correction text supplied by the user during a generation pause
+    artifact_correction: str = ""
     # Gantt chart PNG as base64 string
     gantt_png_b64: str | None = None
     # PDF as bytes

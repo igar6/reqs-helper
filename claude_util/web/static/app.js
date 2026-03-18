@@ -195,6 +195,7 @@ function dispatch(msg) {
         if (currentPhase === 'GENERATING') {
           isGenerating = true;
           setSendEnabled(false);
+          document.getElementById('chat-input').placeholder = 'Describe your idea or requirement…';
           document.getElementById('generate-btn').classList.remove('visible');
         }
       }
@@ -249,14 +250,19 @@ function dispatch(msg) {
       {
         const { completed, total, next_title } = payload;
         isGenerating = false;
+        // Re-enable input so the user can send a correction
+        setSendEnabled(true);
+        document.getElementById('chat-input').placeholder =
+          'Send a correction to refine this artifact, or click Generate to continue…';
+        document.getElementById('chat-input').focus();
         // Repurpose the generate button for the next step
         const genBtn = document.getElementById('generate-btn');
         genBtn.textContent = `⚡ Generate: ${next_title} (${completed + 1}/${total})`;
         genBtn.onclick = sendGenerateNext;
         genBtn.classList.add('visible');
-        // Also add an informational chat message
+        // Informational chat message
         appendChatMsg('assistant',
-          `**${completed}/${total}** done. Click to generate **${next_title}**.`);
+          `**${completed}/${total}** done. Send a correction to refine this artifact, or click **Generate** to continue.`);
       }
       break;
 
@@ -450,7 +456,7 @@ function sendMessage() {
     showToast('Not connected — wait for the server or refresh the page.');
     return;
   }
-  if (currentPhase === 'GENERATING') return;
+  if (currentPhase === 'GENERATING' && isGenerating) return;
 
   // Show user message with attachment names if any
   const displayText = text + (pendingAttachments.length

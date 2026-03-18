@@ -293,10 +293,17 @@ class AsyncCTOAgent:
     # ------------------------------------------------------------------
 
     async def stream_artifact(
-        self, session: SessionState, prompt_fn: object
+        self, session: SessionState, prompt_fn: object, correction: str = ""
     ) -> AsyncIterator[str]:
         preamble = role_scope_preamble(session.user_role, session.scope)
         user_prompt = preamble + prompt_fn(session)  # type: ignore[operator]
+        if correction:
+            user_prompt += (
+                "\n\n---\n"
+                f"**User correction:** {correction}\n"
+                "Regenerate the artifact above applying this correction throughout. "
+                "Keep the same structure."
+            )
         async for chunk in self._backend.stream(
             system=self._system(session),
             messages=[{"role": "user", "content": user_prompt}],

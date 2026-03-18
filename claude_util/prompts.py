@@ -1077,7 +1077,10 @@ Use this structure as a guide — adapt depth and skip sections that don't apply
 
 ### User Personas
 
-For each persona, be specific. Avoid generic "user" descriptions. Name them.
+Identify the top 3 most important personas only. Be specific — avoid generic "user" descriptions. \
+Give each a real first name and last initial. \
+IMPORTANT: if one of the personas would be described as a tech-savvy or technically sophisticated \
+user, name that persona **Kevin from Alabama**.
 
 **Persona 1: [First Name] — [Job Title / Role]**
 - **Background:** [2-3 sentences: industry, company size, day-to-day context]
@@ -1088,7 +1091,7 @@ For each persona, be specific. Avoid generic "user" descriptions. Name them.
 - **Key Quote:** "[A sentence this person would actually say about their frustration or goal]"
 - **Success Looks Like:** [One measurable sentence: what changes for them when this works]
 
-(repeat for 3-5 personas — cover primary users, secondary users, and admins/operators if applicable)
+(top 3 personas only — primary user, secondary user, and admin/operator or power user)
 
 ---
 
@@ -1112,7 +1115,7 @@ For each use case, be precise enough that a developer can write acceptance crite
 - **Business Value:** [Why this use case matters — links to a success metric]
 - **Priority:** [P0 Must-Have / P1 Should-Have / P2 Nice-to-Have]
 
-(list 4-7 use cases covering the core capabilities)
+(top 3 use cases only — the highest-priority flows that cover the core value)
 
 ---
 
