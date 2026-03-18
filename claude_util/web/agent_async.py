@@ -22,6 +22,8 @@ from ..prompts import (
     BUSINESS_SUMMARY_PROMPT,
     TECHNICAL_DESIGN_PROMPT,
     RACI_TIMELINE_PROMPT,
+    DIAGRAM_SUFFICIENCY_CHECK,
+    ARCHITECTURE_DIAGRAM_PROMPT,
     safe_deliverables_prompt,
     dor_prompt,
     role_scope_preamble,
@@ -291,6 +293,33 @@ class AsyncCTOAgent:
     # ------------------------------------------------------------------
     # Artifact generation phase
     # ------------------------------------------------------------------
+
+    # ------------------------------------------------------------------
+    # Diagram agent (dedicated, minimal context — diagram only)
+    # ------------------------------------------------------------------
+
+    _DIAGRAM_SYSTEM = (
+        "You are a software architecture diagram specialist. "
+        "Your only job is to output valid Mermaid flowchart code. "
+        "Never include explanations, prose, or markdown fences."
+    )
+
+    async def check_diagram_sufficiency(self, technical_design: str) -> bool:
+        result = await self._backend.complete(
+            system=DIAGRAM_SUFFICIENCY_CHECK,
+            messages=[{"role": "user", "content": technical_design}],
+            max_tokens=5,
+        )
+        return "YES" in result.upper()
+
+    async def stream_diagram(self, technical_design: str) -> AsyncIterator[str]:
+        prompt = ARCHITECTURE_DIAGRAM_PROMPT.format(technical_design=technical_design)
+        async for chunk in self._backend.stream(
+            system=self._DIAGRAM_SYSTEM,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=2048,
+        ):
+            yield chunk
 
     async def stream_artifact(
         self, session: SessionState, prompt_fn: object, correction: str = ""

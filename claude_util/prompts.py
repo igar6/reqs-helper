@@ -297,15 +297,13 @@ You are in CLARIFICATION ROUND {round} of {max_rounds}.
 
 {focus}
 
-Ask 1 to 3 questions depending on how much is still unclear — ask more when the input is vague \
-or incomplete, fewer when most of the focus area is already addressed. \
+Always ask at least 1 question, up to 3 depending on how much is still unclear — ask more when \
+the input is vague or incomplete, fewer when most of the focus area is already addressed. \
 Format as a numbered list. Each question is one direct sentence. No preamble, no commentary, \
 no answers. Do not repeat anything already answered in the conversation.
 
 If the user shows reluctance, impatience, or resistance to answering — or signals they just want \
 to proceed — do not push further. Output ONLY the single word: SUFFICIENT
-
-If every critical dimension is already fully and specifically covered, also output ONLY: SUFFICIENT
 """
 
 SUFFICIENCY_CHECK_PROMPT = """\
@@ -695,15 +693,6 @@ or if the user explicitly asked about technology choices.]
 |-----------|---------|----------|
 | [feature] | Build / Buy / OSS | [1-line] |
 
-### Architecture Diagram
-
-Output a Mermaid diagram showing the logical system structure.
-- Wrap in ```mermaid fences
-- Start with: flowchart TD
-- Show logical components and how they connect — label arrows with data or action, not protocols
-- Only name specific technologies if the user stated them
-- Keep it readable — max 12-15 nodes
-- Use subgraphs to group layers (e.g., subgraph Frontend, subgraph Backend, subgraph Data)
 """
 
 _SAFE_FULL = """\
@@ -1035,6 +1024,14 @@ the decisions that, if unclear, will cause delivery problems. Skip if obvious.]
 """
 
 RACI_TIMELINE_PROMPT = RACI_PROMPT  # backward-compat alias
+
+DIAGRAM_SUFFICIENCY_CHECK = """\
+Review this technical design document. Decide if it contains enough named components, \
+system layers, or integration points to produce a meaningful Mermaid architecture diagram \
+(minimum: 3 distinct named components with at least some relationships described).
+
+Answer with ONLY: YES or NO
+"""
 
 ARCHITECTURE_DIAGRAM_PROMPT = """\
 Based on this technical design, generate a Mermaid architecture diagram.

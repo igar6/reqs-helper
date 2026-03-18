@@ -242,11 +242,11 @@ async def _run_clarification(
     agent: AsyncCTOAgent,
 ) -> None:
     """Ask clarifying questions or transition to refinement."""
-    # Check if we already have sufficient information
+    # Check if we already have sufficient information (never skip round 1)
     is_sufficient = False
     if session.round >= session.max_rounds:
         is_sufficient = True
-    else:
+    elif session.round > 1:
         try:
             is_sufficient = await agent.check_sufficiency(session)
         except Exception:
@@ -397,11 +397,21 @@ async def _handle_generate(
         return  # leave artifact_index unchanged so user can regenerate
     await ws.send_json(_msg("artifact_complete", artifact_id=artifact_id, full_text=full_text))
 
-    # Extract Mermaid immediately after technical_design completes
+    # After technical_design: run dedicated diagram agent if design is clear enough
     if artifact_id == "technical_design":
-        mermaid_code = _extract_mermaid(full_text)
-        if mermaid_code:
-            await ws.send_json(_msg("mermaid_ready", mermaid_code=mermaid_code))
+        try:
+            sufficient = await agent.check_diagram_sufficiency(full_text)
+        except Exception:
+            sufficient = False
+        if sufficient:
+            diagram_code = ""
+            try:
+                async for chunk in agent.stream_diagram(full_text):
+                    diagram_code += chunk
+            except Exception:
+                diagram_code = ""
+            if diagram_code.strip():
+                await ws.send_json(_msg("mermaid_ready", mermaid_code=diagram_code.strip()))
 
     session.artifact_stopped = False
     session.artifact_index += 1
