@@ -216,9 +216,13 @@ async def _handle_user_message(
         await _run_refinement(ws, session, agent)
 
     elif session.phase == Phase.GENERATING:
-        # User sent a correction during a generation pause — re-generate the last artifact
+        # User sent a correction during a generation pause — re-generate the current artifact.
+        # After a normal pause, artifact_index points to the NEXT artifact, so step back.
+        # After a stop, artifact_index already points to the stopped artifact, so don't step back.
         session.artifact_correction = text.strip()
-        session.artifact_index = max(0, session.artifact_index - 1)
+        if not session.artifact_stopped:
+            session.artifact_index = max(0, session.artifact_index - 1)
+        session.artifact_stopped = False
         await ws.send_json(_msg(
             "chat_message", role="assistant",
             content="Got it — regenerating with your correction…"
@@ -388,6 +392,7 @@ async def _handle_generate(
     session.artifacts[artifact_id] = full_text
 
     if stopped:
+        session.artifact_stopped = True
         await ws.send_json(_msg("generation_stopped", artifact_id=artifact_id))
         return  # leave artifact_index unchanged so user can regenerate
     await ws.send_json(_msg("artifact_complete", artifact_id=artifact_id, full_text=full_text))
@@ -398,6 +403,7 @@ async def _handle_generate(
         if mermaid_code:
             await ws.send_json(_msg("mermaid_ready", mermaid_code=mermaid_code))
 
+    session.artifact_stopped = False
     session.artifact_index += 1
 
     if session.artifact_index < len(ARTIFACT_SEQUENCE):

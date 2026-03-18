@@ -34,6 +34,8 @@ class SessionState:
     artifact_index: int = 0
     # Correction text supplied by the user during a generation pause
     artifact_correction: str = ""
+    # True when the last artifact was stopped mid-stream (index not yet incremented)
+    artifact_stopped: bool = False
     # Gantt chart PNG as base64 string
     gantt_png_b64: str | None = None
     # PDF as bytes
