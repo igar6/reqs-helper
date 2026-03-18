@@ -24,6 +24,7 @@ from ..prompts import (
     RACI_TIMELINE_PROMPT,
     DIAGRAM_SUFFICIENCY_CHECK,
     ARCHITECTURE_DIAGRAM_PROMPT,
+    JUDGE_PROMPT,
     safe_deliverables_prompt,
     dor_prompt,
     role_scope_preamble,
@@ -318,6 +319,25 @@ class AsyncCTOAgent:
             system=self._DIAGRAM_SYSTEM,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=2048,
+        ):
+            yield chunk
+
+    async def stream_judge(self, session: SessionState) -> AsyncIterator[str]:
+        artifact_order = [
+            "refined_requirements", "business_summary", "personas_usecases",
+            "dor", "technical_design", "safe_deliverables", "pi_planning", "raci_timeline",
+        ]
+        parts = []
+        for key in artifact_order:
+            text = session.artifacts.get(key, "")
+            if text.strip():
+                parts.append(text.strip())
+        artifacts_text = "\n\n---\n\n".join(parts)
+        user_msg = JUDGE_PROMPT.format(artifacts=artifacts_text)
+        async for chunk in self._backend.stream(
+            system="You are an independent senior product and engineering reviewer. Be concise and direct.",
+            messages=[{"role": "user", "content": user_msg}],
+            max_tokens=600,
         ):
             yield chunk
 

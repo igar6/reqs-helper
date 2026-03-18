@@ -1026,9 +1026,9 @@ the decisions that, if unclear, will cause delivery problems. Skip if obvious.]
 RACI_TIMELINE_PROMPT = RACI_PROMPT  # backward-compat alias
 
 DIAGRAM_SUFFICIENCY_CHECK = """\
-Review this technical design document. Decide if it contains enough named components, \
-system layers, or integration points to produce a meaningful Mermaid architecture diagram \
-(minimum: 3 distinct named components with at least some relationships described).
+Review this technical design document. Decide if it contains at least 2 named components, \
+services, layers, or integration points that can be connected in a diagram. \
+When in doubt, answer YES — a simple diagram is better than no diagram.
 
 Answer with ONLY: YES or NO
 """
@@ -1045,6 +1045,29 @@ Rules:
 - Label arrows with the protocol or data type
 - Keep it readable — max 15-20 nodes
 - Use subgraphs to group related components (e.g., subgraph Backend, subgraph Data Layer)
+"""
+
+JUDGE_PROMPT = """\
+You are an independent senior product and engineering reviewer. You have just read the full \
+delivery plan below — requirements, business summary, personas, definition of ready, \
+technical design, SAFe deliverables, PI planning, and RACI/timeline.
+
+Write a short, honest review in plain markdown. Structure it exactly as follows:
+
+### Plan Review
+
+**Summary** (2-3 sentences max): What is being built and the core approach.
+
+**Feasibility** (1-2 sentences): Is the technical approach realistic given the scope and team?
+
+**Viability** (1-2 sentences): Is there a plausible path to business value? Any significant risk?
+
+**Score: X / 10** — one sentence verdict.
+
+Be direct. No filler. Flag the single biggest risk if there is one.
+
+---
+{artifacts}
 """
 
 GANTT_DATA_PROMPT = """\

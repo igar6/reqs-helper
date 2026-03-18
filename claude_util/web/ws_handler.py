@@ -368,7 +368,7 @@ async def _handle_generate(
 
     idx = session.artifact_index
     if idx >= len(ARTIFACT_SEQUENCE):
-        await _finalize_generation(ws, session)
+        await _finalize_generation(ws, session, agent)
         return
 
     artifact_id, title, prompt_fn = ARTIFACT_SEQUENCE[idx]
@@ -425,10 +425,19 @@ async def _handle_generate(
             next_title=next_title,
         ))
     else:
-        await _finalize_generation(ws, session)
+        await _finalize_generation(ws, session, agent)
 
 
-async def _finalize_generation(ws: WebSocket, session: SessionState) -> None:
+async def _finalize_generation(ws: WebSocket, session: SessionState, agent: AsyncCTOAgent) -> None:
+    # LLM-as-a-judge: stream plan review into chat
+    await ws.send_json(_msg("chat_stream_start", role="assistant"))
+    try:
+        async for chunk in agent.stream_judge(session):
+            await ws.send_json(_msg("chat_stream_token", token=chunk))
+    except Exception:
+        pass
+    await ws.send_json(_msg("chat_stream_end"))
+
     await ws.send_json(_msg(
         "markdown_ready",
         download_url=f"/api/export/markdown?session_id={session.session_id}",
