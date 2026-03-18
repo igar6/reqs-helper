@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude_util"
+version = "0.2.0"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.30.0",
+    "anthropic>=0.40.0",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "websockets>=12.0",
+    "fpdf2>=2.7.9",
+    "matplotlib>=3.9.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+cto-agent = "claude_util.cli:run"
+cto-web   = "claude_util.web.app:serve"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["claude_util*"]
+
+[tool.setuptools.package-data]
+"claude_util.web" = ["static/*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

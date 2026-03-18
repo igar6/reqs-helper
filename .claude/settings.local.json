@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(# Copy .env.example → .env so the key is actually available\ncp /c/Users/rygie/claude_util/.env.example /c/Users/rygie/claude_util/.env\n# Verify\npython -c \"\nfrom dotenv import load_dotenv\nload_dotenv\\('/c/Users/rygie/claude_util/.env'\\)\nimport os\nkey = os.getenv\\('OPENROUTER_API_KEY', ''\\)\nprint\\('Key loaded:', bool\\(key\\), '| starts with sk-or:', key[:6]\\)\n\")",
+      "Bash(python -c \":*)",
+      "Bash(grep:*)"
+    ]
+  }
+}

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTO Requirements Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- Connecting overlay -->
+<div id="connecting-overlay">
+  <div class="spinner"></div>
+  <p>Connecting to CTO Agent...</p>
+</div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <div class="logo">
+    <div class="dot"></div>
+    CTO Requirements Agent
+  </div>
+
+  <div id="phase-bar">
+    <div class="phase-step active" data-phase="CLARIFYING">
+      <span class="num">1</span>
+      <span>Clarify</span>
+    </div>
+    <span class="phase-arrow">›</span>
+    <div class="phase-step" data-phase="REFINING">
+      <span class="num">2</span>
+      <span>Refine</span>
+    </div>
+    <span class="phase-arrow">›</span>
+    <div class="phase-step" data-phase="GENERATING">
+      <span class="num">3</span>
+      <span>Generate</span>
+    </div>
+    <span class="phase-arrow">›</span>
+    <div class="phase-step" data-phase="DONE">
+      <span class="num">4</span>
+      <span>Done</span>
+    </div>
+  </div>
+
+  <div id="model-badge">Loading...</div>
+</div>
+
+<!-- Main split layout -->
+<div id="main">
+
+  <!-- LEFT: Chat -->
+  <div id="chat-panel">
+    <div id="chat-messages"></div>
+
+    <!-- Generate artifacts button (shown after refinement) -->
+    <button id="generate-btn" onclick="sendGenerate()">
+      ⚡ Generate Artifacts
+    </button>
+
+    <!-- Attachment preview -->
+    <div id="attachment-preview"></div>
+
+    <!-- Input -->
+    <div id="chat-input-area">
+      <button id="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach file or image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.41 17.41a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+      <input type="file" id="file-input" accept="image/*,.txt,.md,.pdf,.docx,.csv" multiple style="display:none" onchange="handleFileSelect(event)" />
+      <textarea
+        id="chat-input"
+        placeholder="Describe your idea or requirement..."
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button id="send-btn" onclick="sendMessage()" title="Send (Enter)">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Artifacts -->
+  <div id="artifact-panel">
+
+    <!-- Tabs -->
+    <div id="artifact-tabs">
+      <button class="tab-btn active" data-pane="evaluation" onclick="switchTab(this)">
+        Score <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="refined" onclick="switchTab(this)">
+        Requirements <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="business_summary" onclick="switchTab(this)">
+        Business <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="personas_usecases" onclick="switchTab(this)">
+        Personas <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="dor" onclick="switchTab(this)">
+        DoR <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="technical_design" onclick="switchTab(this)">
+        Tech Design <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="safe_deliverables" onclick="switchTab(this)">
+        SAFe <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="pi_planning" onclick="switchTab(this)">
+        PI Planning <span class="tab-status"></span>
+      </button>
+      <button class="tab-btn" data-pane="raci_timeline" onclick="switchTab(this)">
+        RACI <span class="tab-status"></span>
+      </button>
+    </div>
+
+    <!-- Pane content -->
+    <div id="artifact-content">
+
+      <div class="artifact-pane active" id="pane-evaluation">
+        <div class="pane-placeholder"><div class="icon">🎯</div><p>Initial Requirements Score — evaluated from your conversation before refinement.</p></div>
+      </div>
+
+      <div class="artifact-pane" id="pane-refined">
+        <div class="pane-placeholder" id="refined-placeholder">
+          <div class="icon">📋</div>
+          <p>Your refined requirements will appear here after clarification.</p>
+        </div>
+        <div id="refined-content" style="display:none"></div>
+      </div>
+
+      <div class="artifact-pane" id="pane-business_summary">
+        <div class="pane-placeholder"><div class="icon">📊</div><p>Business Summary</p></div>
+      </div>
+
+      <div class="artifact-pane" id="pane-personas_usecases">
+        <div class="pane-placeholder"><div class="icon">👤</div><p>Personas &amp; Use Cases</p></div>
+      </div>
+
+      <div class="artifact-pane" id="pane-pi_planning">
+        <div class="pane-placeholder"><div class="icon">📅</div><p>PI Planning Guide</p></div>
+      </div>
+      <div class="artifact-pane" id="pane-dor">
+        <div class="pane-placeholder"><div class="icon">✅</div><p>Definition of Ready</p></div>
+      </div>
+      <div class="artifact-pane" id="pane-technical_design">
+        <div class="pane-placeholder"><div class="icon">🏗️</div><p>Technical Design Summary</p></div>
+      </div>
+      <div class="artifact-pane" id="pane-safe_deliverables">
+        <div class="pane-placeholder"><div class="icon">🚀</div><p>SAFe Deliverables</p></div>
+      </div>
+      <div class="artifact-pane" id="pane-raci_timeline">
+        <div class="pane-placeholder"><div class="icon">👥</div><p>RACI Matrix</p></div>
+      </div>
+
+    </div><!-- #artifact-content -->
+  </div><!-- #artifact-panel -->
+
+</div><!-- #main -->
+
+<!-- Download bar -->
+<div id="download-bar">
+  <span class="status">All artifacts generated</span>
+  <a id="download-btn" href="#" target="_blank">
+    ↓ Download Markdown
+  </a>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast"></div>
+
+<!-- marked.js for markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+
+<!-- Mermaid for architecture diagrams -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+  window._mermaid = mermaid;
+</script>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
